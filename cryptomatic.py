@@ -1,19 +1,39 @@
+import time
+#! Used to time the program
 
+#! Function to encrypt a message
 def encrypt(message, key):
-    pass
+    start = time.perf_counter()
 
+
+
+    finish = time.perf_counter()
+    print(f"\nEncryption took {finish - start} seconds.")
+
+
+#! function to decrypt a message
 def decrypt(message, key, dictionary):
-    pass
+    start = time.perf_counter()
 
-def brute_force(message, key, dictionary):
-    pass
+    finish = time.perf_counter()
+    print(f"\nDecryption took {finish - start} seconds.")
+
+
+#! function to brute force a message
+def brute_force(message, dictionary):
+    start = time.perf_counter()
+
+    finish = time.perf_counter()
+    print(f"\nBrute force took {finish - start} seconds.")
+
 
 def main():
 
     print("This program will encrypt and decrypt messages.")
     #! Store Dictionary in a Set because it has O(1) lookup time
+    #! Length of the dictionary is 80368
     with open("Dictionary.txt", "r") as allwords:
-        dictionary = allwords.read().splitlines()
+        dictionary = set(allwords.read().splitlines())
 
         #! Ask user for what operation to perform
         print("Would you like to encrypt(1), decrypt(2), or brute force(3) a message? ")
@@ -26,15 +46,19 @@ def main():
 
         if prompt == "1":
             print("You have chosen to encrypt a message.")
-            encrypt(dictionary)
+            file = input("Enter the name of the file you would like to encrypt: ")
+            encrypt(file, dictionary)
 
         elif prompt == "2":
             print("You have chosen to decrypt a message.")
-            decrypt(dictionary)
+            file = input("Enter the name of the file you would like to decrypt: ")
+            key = input("Enter the two-lettered key to use to decrypt the message: ")
+            decrypt(file, key, dictionary)
 
         else:
             print("You have chosen to brute force a message.")
-            brute_force(dictionary)
+            file = input("Enter the name of the file you would like to brute force: ")
+            brute_force(file, dictionary)
 
     # message = "Hello World"5
     # key = "ab"
