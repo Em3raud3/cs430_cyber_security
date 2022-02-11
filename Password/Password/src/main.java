@@ -1,9 +1,11 @@
+// ?  Author: Jeffrey Weng
+
+// ? Useage:
+// ? 		Run the program
+// ? 		Enter file name of dictionary as instructed
+// ? 		Enter file name of password file as instructed
+
 import java.util.*;
-
-import javax.lang.model.util.ElementFilter;
-import javax.lang.model.util.ElementScanner6;
-import javax.print.event.PrintEvent;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 
@@ -11,7 +13,10 @@ public class main{
     public static void main(String[] args)
 
     {   // ! Load in the wordlist in set for fast lookup time
-        String dictionaryName = "wordlist.txt";
+        // User input for file name
+        Scanner input = new Scanner(System.in);
+        System.out.println("Please enter the name of the file you would like to use: ");
+        String dictionaryName = input.nextLine();
         Set<String> word = new LinkedHashSet<String>();
 
         // !Read file into word line by line
@@ -25,12 +30,12 @@ public class main{
             System.out.println("File not found");
         }
 
-        // Print out the word
-        // System.out.println(word);
         // ! Load in user information
         List <String> user = new ArrayList<String>();
         try {
-            Scanner file = new Scanner(new File("passwd1.txt"));
+            System.out.println("Please enter in name of user information file");
+            String fileName = input.nextLine();
+            Scanner file = new Scanner(new File("fileName"));
             while (file.hasNextLine()) {
                 user.add(file.nextLine());
             }
@@ -38,6 +43,9 @@ public class main{
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
+
+        //close the scanner
+        input.close();
 
         // ? Create a List of List of strings
         List<List<String>> userInfoArray = new ArrayList<List<String>>();
@@ -53,6 +61,11 @@ public class main{
         // ? Create Array List holding only relevant info
         ArrayList<ArrayList<String>> parsedData = new ArrayList<ArrayList<String>>();
 
+        ArrayList<String> passwordList = new ArrayList<String>(); // * This is mainly used as a counter for how many passwords was I able to crack
+
+        // Start a timer
+        long startTime = System.nanoTime();
+
         for (int i = 0; i < userInfoArray.size(); i++) {
             // split index  5 with space as delimiter of the 4 index of userInfoArray
             String[] nameData = userInfoArray.get(i).get(4).split(" ");
@@ -65,23 +78,29 @@ public class main{
         // * Loop though nameData and begin to crack password
         for (int i = 0; i < parsedData.size(); i++) {
             //! Try firstname
-            mangleWord(parsedData.get(i).get(0), parsedData.get(i).get(2), parsedData.get(i).get(3), i + 1);
+            mangleWord(parsedData.get(i).get(0), parsedData.get(i).get(2), parsedData.get(i).get(3), i + 1, passwordList);
 
             //! Try lastname
-            mangleWord(parsedData.get(i).get(1), parsedData.get(i).get(2), parsedData.get(i).get(3), i + 1);
+            mangleWord(parsedData.get(i).get(1), parsedData.get(i).get(2), parsedData.get(i).get(3), i + 1, passwordList);
 
             //! Try wordList
             for (String wordList : word) {
-                mangleWord(wordList, parsedData.get(i).get(2), parsedData.get(i).get(3), i + 1);
+                mangleWord(wordList, parsedData.get(i).get(2), parsedData.get(i).get(3), i + 1, passwordList);
             }
-
         }
+        // Print out length of passwordList
+        System.out.println(passwordList.size() + " out of 20 passwords found");
+
+        // End the timer
+        long endTime = System.nanoTime();
+
+        // Print out the time it took to run the program
+        System.out.println("Time: " + (endTime - startTime) / 1000000000.0 + " seconds");
 
     }
 
-    public static void  mangleWord(String word, String salt, String encryptedPassword, int index) {
-        // create new arraylist for password
-        ArrayList<String> passwordList = new ArrayList<String>();
+    // ! This methods tries different mangling of the word and checks if it matches the encrypted password
+    public static void  mangleWord(String word, String salt, String encryptedPassword, int index, ArrayList<String> passwordList) {
 
         if (jcrypt.crypt(salt, word).equals(encryptedPassword)) {
             System.out.println("Password " + index + " Cracked: " + word + " ==> " + encryptedPassword); // * Try word as it is
@@ -153,26 +172,29 @@ public class main{
         }
 
         else if (jcrypt.crypt(salt, reverse(word.toLowerCase())).equals(encryptedPassword)) {
-            System.out.println("Password " + index + " Cracked: " + reverse(word.toLowerCase()) + " ==> " + encryptedPassword);
+            System.out.println("Password " + index + " Cracked: " + reverse(word.toLowerCase()) + " ==> " + encryptedPassword); // * tries an all lowercase word that is reversed
+            passwordList.add(reverse(word.toLowerCase()));
             return;
         }
 
         else{
-            appendPrepend(word, salt, encryptedPassword, index); // * Try to add letter to start and end
-            appendPrepend(firstLower(word), salt, encryptedPassword, index); // * only first letter lower and try to prepend/append
-            appendPrepend(word.substring(0, word.length() - 1), salt, encryptedPassword, index); // * Remose last letter and add random letter
+            appendPrepend(word, salt, encryptedPassword, index, passwordList); // * Try to add letter to start and end
+            appendPrepend(firstLower(word), salt, encryptedPassword, index, passwordList); // * only first letter lower and try to prepend/append
+            appendPrepend(word.substring(0, word.length() - 1), salt, encryptedPassword, index, passwordList); // * Remose last letter and add random letter
         }
     }
 
-    public static void appendPrepend(String word, String salt, String encryptedPassword, int index){
+    public static void appendPrepend(String word, String salt, String encryptedPassword, int index, ArrayList<String> passwordList){
         for (int j= 32; j < 127; j++) {
             if(jcrypt.crypt(salt, word + String.valueOf((char) j)).equals(encryptedPassword)){
                 System.out.println("Password " + index + " Cracked: " + (word + String.valueOf((char) j)) + " ==> " + encryptedPassword);
+                passwordList.add(word + String.valueOf((char) j));
                 break;
             }
             else{
                 if(jcrypt.crypt(salt, String.valueOf((char) j) + word).equals(encryptedPassword)){
                     System.out.println("Password " + index + " Cracked: " + (String.valueOf((char) j) + word) + " ==> " + encryptedPassword);
+                    passwordList.add(String.valueOf((char) j) + word);
                     break;
                 }
             }
