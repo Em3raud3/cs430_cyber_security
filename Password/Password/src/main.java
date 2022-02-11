@@ -35,7 +35,7 @@ public class main{
         try {
             System.out.println("Please enter in name of user information file");
             String fileName = input.nextLine();
-            Scanner file = new Scanner(new File("fileName"));
+            Scanner file = new Scanner(new File(fileName));
             while (file.hasNextLine()) {
                 user.add(file.nextLine());
             }
